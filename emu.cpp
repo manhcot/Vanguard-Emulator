@@ -74,7 +74,7 @@ void log_hex(const uint8_t* data, size_t size, const char* prefix = "") {
     }
 }
 
-// VAN 102 FIX: добавляем jitter к timestamp
+
 uint64_t get_realistic_timestamp() {
     static std::random_device rd;
     static std::mt19937_64 gen(rd());
@@ -86,14 +86,14 @@ uint64_t get_realistic_timestamp() {
     return base + jitter(gen);
 }
 
-// VAN 68 FIX: проверка на rate limiting
+
 bool check_auth_rate_limit() {
     uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     
     uint64_t last = last_auth_time.load();
     
-    // Минимум 500ms между auth пакетами
+   
     if (now - last < 500) {
         log_message("VAN-68 FIX: Auth rate limited");
         return false;
