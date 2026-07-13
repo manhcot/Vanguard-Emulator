@@ -74,7 +74,6 @@ void log_hex(const uint8_t* data, size_t size, const char* prefix = "") {
     }
 }
 
-// VAN 102 FIX: добавляем jitter к timestamp
 uint64_t get_realistic_timestamp() {
     static std::random_device rd;
     static std::mt19937_64 gen(rd());
@@ -86,7 +85,6 @@ uint64_t get_realistic_timestamp() {
     return base + jitter(gen);
 }
 
-// VAN 68 FIX: проверка на rate limiting
 bool check_auth_rate_limit() {
     uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
@@ -195,7 +193,6 @@ std::vector<uint8_t> create_server_ack(uint32_t magic) {
 }
 
 std::vector<uint8_t> create_auth_ack(uint32_t magic, int version, const uint8_t* uuid_bin) {
-    // VAN 68 FIX: проверка rate limit
     if (!check_auth_rate_limit()) {
         log_message("RATE LIMITED - delaying auth response");
         Sleep(500);
@@ -244,7 +241,6 @@ std::vector<uint8_t> create_auth_ack(uint32_t magic, int version, const uint8_t*
         hdr.message_type = 1;
         resp.insert(resp.end(), (uint8_t*)&hdr, (uint8_t*)&hdr + sizeof(hdr));
         
-        // VAN 102 FIX: реалистичный timestamp с jitter
         uint64_t timestamp = get_realistic_timestamp();
         resp.insert(resp.end(), (uint8_t*)&timestamp, (uint8_t*)&timestamp + 8);
         
@@ -293,16 +289,16 @@ std::vector<uint8_t> create_heartbeat_response(const uint8_t* data, size_t size)
     return resp;
 }
 
-// Memory Patcher: Replaces "onlyazra" with "0x90" (the literal string)
+
 void patch_payload(std::vector<char>& payload) {
-    const char* target = "onlyazra";
+    const char* target = "";
     const char* replacement = "0x90    "; // Padded with spaces to maintain 8 byte length
     size_t target_len = strlen(target);
 
     for (size_t i = 0; i <= payload.size() - target_len; ++i) {
         if (memcmp(&payload[i], target, target_len) == 0) {
             memcpy(&payload[i], replacement, target_len);
-            log_message("PATCHER: Replaced 'onlyazra' with '0x90    ' in payload.");
+           
         }
     }
 }
